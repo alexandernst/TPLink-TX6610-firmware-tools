@@ -1,5 +1,5 @@
 # TPLink-TX6610-V4-firmware-RE
-Information about the binary structure of TP Link's TX6610 V4 firmware
+Information about the binary structure of [TP Link's TX6610 V4 firmware](http://static.tp-link.com/res/down/soft/TX-6610_V4_150922.zip)
 
 I'm working on REing TP Link's TX6610 firmware. I have been able to successfully unpack the files from the firmware.
 I also have been working on actually parsing the header of the firmware's blob and getting information from it.
