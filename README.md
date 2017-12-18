@@ -16,14 +16,17 @@ The firmware consists of several parts:
 ![Header](https://github.com/alexandernst/TPLink-TX6610-V4-firmware-RE/blob/master/TX-6610_V4_150922_bin.png)
 
 * Magic bytes (4 bytes): `HDR2`
-* Header size (uint32_t)
-* File size (uint32_t) Keep in mind this size doesn't include the "unknown ending data". Keep reading.
-* CRC? (4 bytes) This is probably a CRC32, but I haven't successfully proven that.
-* Fw version (64 bytes)
-* LZMA size (uint32_t) The size that the LZMA blob takes (starting from `0x100`)
-* SquashFS size (uint32_t) The size that the SquashFS blob takes (starting from `0x150000`)
-* Fw build (16 bytes)
-* 152 bytes of unknown data (`0x7C` and `0x7E` look interesting, but I haven't found what they are for)
+* Header size (`uint32_t`)
+* File size (`uint32_t`) Keep in mind this size doesn't include the "unknown ending data". Keep reading.
+* CRC32 (4 bytes) with a custom table (check `compress.py`).
+* Version (32 bytes)
+* Customer version (32 bytes)
+* Kernel size (`uint32_t`) The size that the LZMA blob takes (starting from `0x100`)
+* RootFS size (`uint32_t`) The size that the SquashFS blob takes (starting from `0x150000`)
+* ctrom size (`uint32_t`)
+* Model (32 bytes)
+* Unknown 4 bytes
+* 128 empty bytes
 
 ## LZMA blob
 
@@ -33,12 +36,11 @@ Starts at `0x100`. It contains the kernel.
 
 Starts at `0x150000`. It contains the FS and configuration data. It also contains the web-admin, users/passwords, etc...
 
-## Padding and ending data.
+## Unknown data
 
-After the end of the SquashFS blob (remember, `0x150000` + the SquashFS blob size from the header) there are `55640` nulled bytes. I don't know if that is some sort of padding, some sort of required empty space, or ...
+At `0x350000` there are 232 bytes of unknown data. After some more debugging of the firmware, I'm quite sure that `0x350000` to `0x35000F` and `0x3500D4` to `0x3500E3` contain MD5 checksums, but I still don't know the data that is being checked against. The rest is unknown. 
 
-... And after those `55640` bytes, there are another `232` bytes. That last section actually holds data, but I haven't found what is it's purpose, how it's generated or what it is used for.
+## Python dumping and compressing tools
 
-## Python dumping tool
-
-I'm adding a simple python piece of code that extracts the different parts of the firmware.
+I'm adding a simple python piece of code that extracts the different parts of the firmware and another one that joins them back together.
+Note that the output of the second piece of code still doesn't produce an usable firmware blob as I still don't know how to generate the last 232 bytes.
