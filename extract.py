@@ -1,37 +1,33 @@
 import os
 import struct
 
-IMAGE = "TX-6610_V4_150922.bin"
-st = os.stat(IMAGE)
-mem = open(IMAGE, "rb")
+FIRMWARE = "TX-6610_V4_150922.bin"
+st = os.stat(FIRMWARE)
+mem = open(FIRMWARE, "rb")
 
-magic_bytes, header_size, file_size, crc, fw_version, lzma_size, squashfs_size = struct.unpack(">4sII4s64sII", mem.read(88))
+magic_bytes, header_size, file_size, crc, version, customer_version, kernel_size, rootfs_size, ctrom_size, model = struct.unpack(">4sIII32s32sIII32s", mem.read(124))
 
 print("Magic bytes: {0}".format(magic_bytes))
 print("Header size: {0} bytes".format(header_size))
-print("File size (without data added at the end): {0} bytes".format(file_size))
-print("CRC (?): {}".format(crc))
-print("Fw version: {0}".format(fw_version))
-print("LZMA size: {0} bytes".format(lzma_size))
-print("SquashFS size: {0} bytes".format(squashfs_size))
+print("File size: {0} bytes".format(file_size))
+print("CRC32: {:08X}".format(crc))
+print("Version: {0}".format(version))
+print("Customer version: {0}".format(customer_version))
+print("Kernel size: {0} bytes".format(kernel_size))
+print("Rootfs size: {0} bytes".format(rootfs_size))
+print("ctrom size: {0} bytes".format(ctrom_size))
+print("Model: {0}".format(model))
 
 #dump lzma
 mem.seek(0x100)
-lzma = mem.read(lzma_size)
-f = open("100.lzma", "wb")
+lzma = mem.read(kernel_size)
+f = open("tclinux", "wb")
 f.write(lzma)
 f.close()
 
 #dump squashfs
 mem.seek(0x150000)
-squashfs = mem.read(squashfs_size)
+squashfs = mem.read(rootfs_size)
 f = open("150000.squashfs", "wb")
 f.write(squashfs)
-f.close()
-
-#dump data at the end
-end_data_size = st.st_size - file_size
-end_data = mem.read(end_data_size)
-f = open("end.bin", "wb")
-f.write(end_data)
 f.close()
