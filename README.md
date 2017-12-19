@@ -9,7 +9,7 @@ The firmware consists of several parts:
 * 256 bytes header
 * LZMA blob (starting at `0x100`)
 * SquashFS blob (starting at `0x150000`)
-* Some sort of data appended to the end
+* Some sort of data appended to the end (starting at `0x350000`)
 
 ## Header
 
@@ -38,7 +38,7 @@ Starts at `0x150000`. It contains the FS and configuration data. It also contain
 
 ## Unknown data
 
-At `0x350000` there are 232 bytes of unknown data. After some more debugging of the firmware, I'm quite sure that `0x350000` to `0x35000F` and `0x3500D4` to `0x3500E3` contain MD5 checksums, but I still don't know the data that is being checked against. The rest is unknown. 
+At `0x350000` there are 232 bytes of unknown data. After some more debugging of the firmware, I'm quite sure that `0x350000` to `0x35000F` and `0x3500D4` to `0x3500E3` contain MD5 checksums, but I still don't know which is the data that is being checked against. The rest is unknown. 
 
 ## Python dumping and compressing tools
 
