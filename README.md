@@ -58,6 +58,16 @@ Basically, the firmware blob is constructed the following way:
 
 Now run an MD5 against that entire blob and then use the result to replace the magic md5 bytes.
 
+## Editing the RootFS
+
+You'll need `squashfs` with LZMA support. On MacOS that would be `brew install squashfs`.
+Now download the firmware and move it to the folder where you cloned this repository.
+Then extract the rootfs and unsquash it: `python3 extract.py` and `sudo unsquash rootfs.squashfs`.
+Note that you need the `sudo` because there are some special files (devices) in the `/dev` folder.
+
+Once you're done editing the files, squash everything: `mksquashfs squashfs-root/ rootfs.squashfs -noappend -always-use-fragments -comp lzma`.
+The last thing is to compress the firmware and you're done: `python3 compress.py`.
+
 ## Python dumping and compressing tools
 
 I'm adding a simple python piece of code that extracts the different parts of the firmware and another one that joins them back together in a perfectly valid and working firmware.

@@ -28,7 +28,7 @@ f.close()
 #dump squashfs
 mem.seek(0x150000)
 squashfs = mem.read(rootfs_size)
-f = open("150000.squashfs", "wb")
+f = open("rootfs.squashfs", "wb")
 f.write(squashfs)
 f.close()
 

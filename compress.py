@@ -62,7 +62,7 @@ firmware_file = open(FIRMWARE, "wb")
 KERNEL = "tclinux"
 kernel_st = os.stat(KERNEL)
 
-ROOTFS = "150000.squashfs"
+ROOTFS = "rootfs.squashfs"
 rootfs_st = os.stat(ROOTFS)
 rootfs_offset = 0x150000
 
