@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ufwb version="1.17">
+    <grammar name="BIN grammar" start="id:3" author="Alexander Nestorov" uti="com.apple.macbinary-archive">
+        <description>Grammar for BIN files</description>
+        <structure name="BIN file" id="3" length="0" encoding="ISO_8859-1:1987" endian="big" signed="no">
+            <structure name="Header" id="10" length="256">
+                <binary name="Magic bytes" mustmatch="yes" id="11" fillcolor="31FF29" length="4">
+                    <fixedvalues>
+                        <fixedvalue name="magic bytes" value="32524448"/>
+                    </fixedvalues>
+                </binary>
+                <binary name="Header size" id="12" fillcolor="E9FF21" length="4"/>
+                <number name="file_size" id="13" type="integer" length="4">
+                    <description>File_size (including header but excluding the last 232 bytes)</description>
+                </number>
+                <binary name="CRC32" id="14" fillcolor="E133FF" length="4"/>
+                <string name="Version" id="15" fillcolor="A6FAFF" type="fixed-length" length="32"/>
+                <string name="Customer version" id="16" fillcolor="80FFF1" type="fixed-length" length="32"/>
+                <number name="kernel_size" id="17" type="integer" length="4">
+                    <description>Kernel is compressed with LZMA</description>
+                </number>
+                <number name="rootfs_size" id="18" type="integer" length="4">
+                    <description>rootfs is the SquashFS file</description>
+                </number>
+                <number name="ctrom_size" id="19" type="integer" length="4"/>
+                <string name="Model" id="20" fillcolor="9DFF09" type="fixed-length" length="32"/>
+                <number name="No idea..." id="21" fillcolor="FF2E00" type="integer" length="4"/>
+            </structure>
+            <structure name="Blobs" id="23">
+                <binary name="Kernel blob" id="5" length="kernel_size"/>
+                <binary name="Kernel padding" id="33" length="0x150000 - kernel_size - 256"/>
+                <binary name="RootFS blob" id="8" length="rootfs_size"/>
+                <binary name="RootFS padding" id="34" length="0x350000 - 0x150000 - rootfs_size"/>
+            </structure>
+            <structure name="End data" id="28" alignment="4">
+                <binary name="No idea..." id="35" length="212"/>
+                <binary name="MD5 checksum data" id="30" fillcolor="78B8FF" length="16"/>
+                <binary name="Padding" id="36" length="4"/>
+            </structure>
+        </structure>
+    </grammar>
+</ufwb>

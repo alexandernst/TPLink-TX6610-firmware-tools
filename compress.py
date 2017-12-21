@@ -1,8 +1,16 @@
 import os
 import struct
 import io
+import hashlib
 
-crc_32_tab = [
+
+#  ██████  ██████  ███    ██ ███████ ████████  █████  ███    ██ ████████ ███████
+# ██      ██    ██ ████   ██ ██         ██    ██   ██ ████   ██    ██    ██
+# ██      ██    ██ ██ ██  ██ ███████    ██    ███████ ██ ██  ██    ██    ███████
+# ██      ██    ██ ██  ██ ██      ██    ██    ██   ██ ██  ██ ██    ██         ██
+#  ██████  ██████  ██   ████ ███████    ██    ██   ██ ██   ████    ██    ███████
+
+crc_32_table = [
   0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F,
   0xE963A535, 0x9E6495A3, 0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988,
   0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91, 0x1DB71064, 0x6AB020F2,
@@ -48,9 +56,8 @@ crc_32_tab = [
   0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
 ]
 
-FIRMWARE = "pepe.bin"
-st = os.stat(FIRMWARE)
-mem = open(FIRMWARE, "wb")
+FIRMWARE = "new_firmware.bin"
+firmware_file = open(FIRMWARE, "wb")
 
 KERNEL = "tclinux"
 kernel_st = os.stat(KERNEL)
@@ -59,44 +66,116 @@ ROOTFS = "150000.squashfs"
 rootfs_st = os.stat(ROOTFS)
 rootfs_offset = 0x150000
 
+SIGN = "sign"
+sign_offset = 0x350000
+sign_size = 232
+md5_magic_offset = 212
+md5_magic = [0xDCD73AA5, 0xC39598FB, 0xDCF9E7F4, 0x0EAE4737]
+
+# ██   ██ ███████  █████  ██████  ███████ ██████
+# ██   ██ ██      ██   ██ ██   ██ ██      ██   ██
+# ███████ █████   ███████ ██   ██ █████   ██████
+# ██   ██ ██      ██   ██ ██   ██ ██      ██   ██
+# ██   ██ ███████ ██   ██ ██████  ███████ ██   ██
+
 magic_bytes = "2RDH"
 header_size = 256
-file_size = rootfs_offset + rootfs_st.st_size
+file_size = 0x350000
 crc32 = 0xFFFFFFFF
-version = "TCLinux Fw $7.3.94.4 v006"
-customer_version = ""
+version = "TCLinux Fw $7.3.94.4 v006\n"
+customer_version = "\n"
 kernel_size = kernel_st.st_size
 rootfs_size = rootfs_st.st_size
 ctrom_size = 0
-model = "3 6035 122 0"
+model = "3 6035 122 0\n"
 
-buf = io.BytesIO()
-buf.write(open(KERNEL, "rb").read())
-buf.write(struct.pack(str(rootfs_offset - header_size - kernel_size) + "s", ""))
-buf.write(open(ROOTFS, "rb").read())
 
-buf.seek(0)
-byte = buf.read(1)
+# ██████   ██████  ██████  ██    ██
+# ██   ██ ██    ██ ██   ██  ██  ██
+# ██████  ██    ██ ██   ██   ████
+# ██   ██ ██    ██ ██   ██    ██
+# ██████   ██████  ██████     ██
+
+firmware_buf = io.BytesIO()
+firmware_buf.write(open(KERNEL, "rb").read())
+firmware_buf.write(struct.pack(str(rootfs_offset - header_size - kernel_size) + "s", "".encode("ascii")))
+firmware_buf.write(open(ROOTFS, "rb").read())
+firmware_buf.write(struct.pack(str(sign_offset - rootfs_offset - rootfs_size) + "s", "".encode("ascii")))
+
+#  ██████ ██████   ██████ ██████  ██████
+# ██      ██   ██ ██           ██      ██
+# ██      ██████  ██       █████   █████
+# ██      ██   ██ ██           ██ ██
+#  ██████ ██   ██  ██████ ██████  ███████
+
+firmware_buf.seek(0)
+byte = firmware_buf.read(1)
 while byte != "" and len(byte) > 0:
-    crc32 = (crc32 >> 8) ^ crc_32_tab[(crc32 ^ ord(byte)) & 0xff]
-    byte = buf.read(1)
+    crc32 = (crc32 >> 8) ^ crc_32_table[(crc32 ^ ord(byte)) & 0xff]
+    byte = firmware_buf.read(1)
+
+
+# ███████ ██  ██████  ███    ██
+# ██      ██ ██       ████   ██
+# ███████ ██ ██   ███ ██ ██  ██
+#      ██ ██ ██    ██ ██  ██ ██
+# ███████ ██  ██████  ██   ████
+
+sign_buf = io.BytesIO(open(SIGN, "rb").read(md5_magic_offset))
+sign_buf.seek(md5_magic_offset)
+sign_buf.write(struct.pack(">IIII", *md5_magic))
+sign_buf.write(struct.pack("4s", "".encode("ascii")))
+
+
+# ██     ██ ██████  ██ ████████ ███████
+# ██     ██ ██   ██ ██    ██    ██
+# ██  █  ██ ██████  ██    ██    █████
+# ██ ███ ██ ██   ██ ██    ██    ██
+#  ███ ███  ██   ██ ██    ██    ███████
 
 header = struct.pack(
   ">4sIII32s32sIII32s",
-  magic_bytes,
+  magic_bytes.encode("ascii"),
   header_size,
   file_size,
   crc32,
-  version,
-  customer_version,
+  version.encode("ascii"),
+  customer_version.encode("ascii"),
   kernel_size,
   rootfs_size,
   ctrom_size,
-  model
+  model.encode("ascii")
 )
 
-mem.write(header)
-mem.write(struct.pack("I", 0x00200080))
-mem.write(struct.pack("128s", ""))
-mem.write(buf.getvalue())
-mem.close()
+firmware_file.write(header)
+firmware_file.write(struct.pack("I", 0x00200080))
+firmware_file.write(struct.pack("128s", "".encode("ascii")))
+firmware_file.write(firmware_buf.getvalue())
+firmware_file.write(sign_buf.getvalue())
+firmware_file.close()
+
+
+# ██████  ███████     ███████ ██  ██████  ███    ██
+# ██   ██ ██          ██      ██ ██       ████   ██
+# ██████  █████ █████ ███████ ██ ██   ███ ██ ██  ██
+# ██   ██ ██               ██ ██ ██    ██ ██  ██ ██
+# ██   ██ ███████     ███████ ██  ██████  ██   ████
+
+firmware_file = open(FIRMWARE, "rb")
+firmware_content = io.BytesIO(firmware_file.read())
+firmware_file.close()
+
+firmware_md5 = hashlib.md5()
+firmware_md5.update(firmware_content.getvalue())
+print("MD5 checksum:", firmware_md5.hexdigest())
+
+firmware_content.seek(0)
+firmware_buf = io.BytesIO()
+firmware_buf.write(firmware_content.read(firmware_content.getbuffer().nbytes - (sign_size - md5_magic_offset)))
+firmware_buf.write(firmware_md5.digest())
+firmware_buf.write(struct.pack("4s", "".encode("ascii")))
+
+
+firmware_file = open(FIRMWARE, "wb")
+firmware_file.write(firmware_buf.getvalue())
+firmware_file.close()

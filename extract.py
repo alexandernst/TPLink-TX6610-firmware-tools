@@ -31,3 +31,11 @@ squashfs = mem.read(rootfs_size)
 f = open("150000.squashfs", "wb")
 f.write(squashfs)
 f.close()
+
+
+#last 232 bytes
+mem.seek(0x350000)
+ending = mem.read(232)
+f = open("sign", "wb")
+f.write(ending)
+f.close()
