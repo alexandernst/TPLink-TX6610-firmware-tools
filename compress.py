@@ -1,4 +1,5 @@
 import os
+import sys
 import struct
 import io
 import hashlib
@@ -100,6 +101,11 @@ firmware_buf = io.BytesIO()
 firmware_buf.write(open(KERNEL, "rb").read())
 firmware_buf.write(struct.pack(str(rootfs_offset - header_size - kernel_size) + "s", "".encode("ascii")))
 firmware_buf.write(open(ROOTFS, "rb").read())
+
+if sign_offset - rootfs_offset < rootfs_size:
+  print("The sum of the size of the kernel and the rootfs is bigger than what the firmware image can handle.")
+  print(str(rootfs_size - (sign_offset - rootfs_offset)) + " bytes oversize")
+  sys.exit(0)
 firmware_buf.write(struct.pack(str(sign_offset - rootfs_offset - rootfs_size) + "s", "".encode("ascii")))
 
 #  ██████ ██████   ██████ ██████  ██████
