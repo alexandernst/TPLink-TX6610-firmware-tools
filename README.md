@@ -13,7 +13,7 @@ The firmware consists of several parts:
 
 ## Header
 
-![Header](https://github.com/alexandernst/TPLink-TX6610-V4-firmware-RE/blob/master/TX-6610_V4_150922_bin.png)
+![Header](https://github.com/alexandernst/TPLink-TX6610-firmware-tools/blob/master/TX-6610_V4_150922_bin.png)
 
 * Magic bytes (4 bytes): `HDR2`
 * Header size (`uint32_t`)
@@ -43,7 +43,7 @@ Starts at `0x150000`. It contains the FS and configuration data. It also contain
 
 At `0x350000` there are 232 bytes of checksum data. After some more debugging of the firmware, I found how the firmware is validated.
 
-![MD5 validation](https://github.com/alexandernst/TPLink-TX6610-V4-firmware-RE/blob/master/MD5_checksum_-_libcmm.so.png)
+![MD5 validation](https://github.com/alexandernst/TPLink-TX6610-firmware-tools/blob/master/MD5_checksum_-_libcmm.so.png)
 
 Basically, the firmware blob is constructed the following way:
 
